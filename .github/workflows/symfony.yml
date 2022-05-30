@@ -1,0 +1,82 @@
+name: Symfony
+
+on: [push]
+  # push:
+  #  branches: [ main ]
+  #  branches:
+  #    - main
+  #    - 'develop'
+  #    - 'feature/**'
+  # pull_request:
+  #  branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  symfony-tests:
+    name: Functional test
+    # runs-on: ubuntu-latest
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-version: ['7.4']
+        node-version: ['14.7']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 'Password123'
+        ports:
+          - 3306:3306
+    steps:
+    # —— Setup Github actions 🐙 —————————————————————————————————————————————
+    #  To automatically get bug fixes and new Php versions for shivammathur/setup-php,
+    # change this to (see https://github.com/shivammathur/setup-php#bookmark-versioning):
+    - name: Setup PHP, with composer and extension
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, gd, json
+        coverage: xdebug
+    - name: Checkout
+      uses: actions/checkout@v3
+
+      ## —— NPM 🐱 ————————————————————————————————————————————————————————————
+    - name: Setup Nodejs
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+      # —— Composer 🧙‍️ —————————————————————————————————————————————————————————
+    - name: Copy .env.test.local
+      run: php -r "file_exists('.env.test.local') || copy('.env.test', '.env.test.local');"
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - name: Install composer dependencies
+      run: |
+        composer install --no-progress --prefer-dist --optimize-autoloader
+    - name: Install NPM dependencies
+      run: |
+        npm install
+        npm run dev
+    - name: Prepare database
+      run: |
+        php bin/console doctrine:database:create
+        php bin/console doctrine:schema:update --force
+        php bin/console doctrine:fixtures:load -n
+    - name: Execute tests (Unit and Feature tests) via PHPUnit
+      # env:
+      # DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
+      run: php vendor/bin/phpunit
+    - name: Analyse coding style
+      run: php vendor/bin/phpcs
