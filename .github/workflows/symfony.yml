@@ -28,7 +28,8 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: 'producerbuyertest'
+          MYSQL_ROOT_PASSWORD: passwordtest
+          MYSQL_DATABASE: pb-test
         ports:
           - 3306:3306
     steps:
@@ -74,8 +75,8 @@ jobs:
         php bin/console doctrine:database:create
         php bin/console doctrine:schema:update --force
         php bin/console doctrine:fixtures:load -n
-      # env:
-      #  DATABASE_URL: mysql://root:${{ job.services.mysql.ports['3306'] }}@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/${{ job.services.mysql.env.MYSQL_DATABASE }}
+      env:
+       DATABASE_URL: mysql://root:${{ job.services.mysql.env.MYSQL_ROOT_PASSWORD }}@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/${{ job.services.mysql.env.MYSQL_DATABASE }}
     - name: Execute tests (Unit and Feature tests) via PHPUnit
       # env:
       # DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
