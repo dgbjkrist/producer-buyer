@@ -10,21 +10,28 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 /**
- * @ORM\Entity()
+ * @ORM\Entity
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\DiscriminatorMap({"producer"="App\Entity\Producer", "customer"="App\Entity\Customer"})
  * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
-abstract class User implements UserInterface
+abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**
+     * @ORM\Column(type="integer")
      * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected int $id;
+
+    /**
      * @ORM\Column(type="uuid", unique=true)
      */
-    protected Uuid $id;
+    protected Uuid $uuid;
 
     /**
      * @ORM\Column(type="string", length=180, nullable=true)
@@ -58,19 +65,13 @@ abstract class User implements UserInterface
 
     public function __construct()
     {
+        $this->uuid = Uuid::v4();
         $this->registeredAt = new DateTimeImmutable();
     }
 
-    public function getId(): Uuid
+    public function getId(): int
     {
         return $this->id;
-    }
-
-    public function setId($id): self
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getFirstName(): ?string
@@ -145,6 +146,14 @@ abstract class User implements UserInterface
         return $this;
     }
 
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @deprecated since Symfony 5.3
+     */
     public function getUsername(): string
     {
         return (string) $this->email;
@@ -159,5 +168,16 @@ abstract class User implements UserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         $this->plainPassword = null;
+    }
+
+    public function getUuid(): Uuid
+    {
+        return $this->uuid;
+    }
+
+    public function setUuid(Uuid $uuid): self
+    {
+        $this->uuid = $uuid;
+        return $this;
     }
 }
