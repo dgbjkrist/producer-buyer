@@ -9,6 +9,7 @@
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
         <input type="email" name="email" value="{{ last_username }}">
         <input type="password" name="password">
+        <a href="{{ path("security_forgotten_password") }}">Mot de pass oublier</a>
         <button type="submit">Se connecter</button>
     </form>
 {% endblock %}

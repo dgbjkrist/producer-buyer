@@ -63,6 +63,11 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     protected DateTimeImmutable $registeredAt;
 
+    /**
+     * @ORM\Embedded(class="ForgottenPassword")
+     */
+    protected ?ForgottenPassword $forgottenPassword;
+
     public function __construct()
     {
         $this->uuid = Uuid::v4();
@@ -170,6 +175,15 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->plainPassword = null;
     }
 
+    public function hasForgotHisPassword(): void
+    {
+        $this->forgottenPassword = new ForgottenPassword();
+    }
+    public function getFullName(): string
+    {
+        return sprintf("%s %s", $this->firstName, $this->lastName);
+    }
+
     public function getUuid(): Uuid
     {
         return $this->uuid;
@@ -179,5 +193,10 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->uuid = $uuid;
         return $this;
+    }
+
+    public function getForgottenPassword()
+    {
+        return $this->forgottenPassword;
     }
 }
