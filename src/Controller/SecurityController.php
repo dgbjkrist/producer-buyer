@@ -80,8 +80,11 @@ class SecurityController extends AbstractController
     /**
      * @Route("/forgotten-password", name="security_forgotten_password")
      */
-    public function forgottenPassword(Request $request, UserRepository $userRepository, MailerInterface $mailerInterface)
-    {
+    public function forgottenPassword(
+        Request $request,
+        UserRepository $userRepository,
+        MailerInterface $mailerInterface
+    ) {
         $forgottenPasswordInput = new ForgottenPasswordInput();
 
         $form = $this->createForm(ForgottenPasswordType::class, $forgottenPasswordInput)->handleRequest($request);
