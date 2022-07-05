@@ -120,11 +120,10 @@ abstract class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword($password): self
+    public function setPassword($password): void
     {
+        $this->forgottenPassword = null;
         $this->password = $password;
-
-        return $this;
     }
 
     public function getRegisteredAt(): ?\DateTimeImmutable
