@@ -1,0 +1,15 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    {{ form_start(form) }}
+        <div class="card-header">
+            <h1>Modifier les informations de mon exploitation</h1>
+        </div>
+        <div class="card-body">
+            {{ form_rest(form) }}
+        </div>
+        <div class="card-footer">
+            <button type="submit">Modifier</button>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}
