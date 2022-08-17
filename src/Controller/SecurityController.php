@@ -21,29 +21,34 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use App\Entity\User;
 use App\Form\ResetPasswordType;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class SecurityController extends AbstractController
 {
+    public function __construct(private ManagerRegistry $doctrine)
+    {
+    }
     /**
      * @Route("/registration/{role}", name="security_registration")
      */
     public function registration(
         string $role,
         Request $request,
-        UserPasswordEncoderInterface $userPasswordEncoderInterface
+        UserPasswordHasherInterface $userPasswordEncoderInterface
     ): Response {
         $user = Producer::ROLE === $role ? new Producer() : new Customer();
         $form = $this->createForm(RegistrationForm::class, $user)->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $user->setPassword(
-                $userPasswordEncoderInterface->encodePassword($user, $form->get('plainPassword')->getData())
+                $userPasswordEncoderInterface->hashPassword($user, $form->get('plainPassword')->getData())
             );
-            $this->getDoctrine()->getManager()->persist($user);
-            $this->getDoctrine()->getManager()->flush();
+            $this->doctrine->getManager()->persist($user);
+            $this->doctrine->getManager()->flush();
             $this->addFlash("success", "Votre inscription a été effectué avec succes");
 
             return $this->redirectToRoute("index");
@@ -59,6 +64,9 @@ class SecurityController extends AbstractController
      */
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        if($this->getUser() !== null) {
+            return $this->redirectToRoute('farm_update');
+        }
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
@@ -95,8 +103,8 @@ class SecurityController extends AbstractController
             /** @var User $user */
             $user = $userRepository->findOneByEmail($forgottenPasswordInput->getEmail());
             $user->hasForgotHisPassword();
-            $this->getDoctrine()->getManager()->persist($user);
-            $this->getDoctrine()->getManager()->flush();
+            $this->doctrine->getManager()->persist($user);
+            $this->doctrine->getManager()->flush();
 
             $email = (new TemplatedEmail())
                         ->to(new Address($user->getEmail(), $user->getFullName()))
@@ -124,7 +132,7 @@ class SecurityController extends AbstractController
         string $token,
         Request $request,
         UserRepository $userRepository,
-        UserPasswordEncoderInterface $userPasswordEncoderInterface
+        UserPasswordHasherInterface $userPasswordEncoderInterface
     ): Response {
         $user = $userRepository->getUserByForgottenPasswordToken(Uuid::fromString($token));
 
@@ -136,10 +144,10 @@ class SecurityController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $user->setPassword(
-                $userPasswordEncoderInterface->encodePassword($user, $form->get('plainPassword')->getData())
+                $userPasswordEncoderInterface->hashPassword($user, $form->get('plainPassword')->getData())
             );
 
-            $this->getDoctrine()->getManager()->flush();
+            $this->doctrine->getManager()->flush();
             $this->addFlash('success', 'Votre mot de passe a ete modifie avec success');
 
             return $this->redirectToRoute('security_login');

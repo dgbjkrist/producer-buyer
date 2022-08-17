@@ -25,12 +25,17 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use App\Form\FarmType;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @Route("/farm")
 */
 class FarmController extends AbstractController
 {
+    public function __construct(private ManagerRegistry $doctrine)
+    {
+    }
+
     /**
      * @Route("/update", name="farm_update")
     */
@@ -39,7 +44,7 @@ class FarmController extends AbstractController
         $form = $this->createForm(FarmType::class, $this->getUser()->getFarm())->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
+            $this->doctrine->getManager()->flush();
             $this->addFlash('success', 'Les informations de votre exploitation ont ete modifie avec success');
 
             return $this->redirectToRoute('farm_update');
