@@ -13,7 +13,7 @@ class Customer extends User
 {
     public const ROLE = "customer";
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return ["ROLE_CUSTOMER"];
     }

@@ -21,7 +21,7 @@ class Producer extends User
      */
     private ?Farm $farm = null;
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return ["ROLE_PRODUCER"];
     }

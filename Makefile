@@ -1,9 +1,11 @@
 SHELL := /bin/bash
 
 ## —— Symfony 🎶 ———————————————————————————————————————————————————————————————
+start:	## Vider le cache
+	symfony server:start -d
+
 cc:	## Vider le cache
 	$(SYMFONY_CONSOLE) cache:clear
-
 
 phpcbf:
 	php vendor/bin/phpcbf
